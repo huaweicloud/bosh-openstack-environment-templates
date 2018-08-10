@@ -69,7 +69,7 @@ variable "bosh_router_id" {
 }
 
 variable "num_tcp_ports" {
-  default = 100
+  default = 2
   description = "Number of tcp ports, created for tcp routing in Cloud Foundry. Creates required listeners, pools and security rules."
 }
 
