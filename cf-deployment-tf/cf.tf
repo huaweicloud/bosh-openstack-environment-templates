@@ -260,6 +260,7 @@ resource "openstack_lb_loadbalancer_v2" "cf-lb" {
   vip_subnet_id = "${openstack_networking_subnet_v2.cf_subnet.0.id}"
   security_group_ids = ["${openstack_networking_secgroup_v2.cf_lb_sec_group.id}"]
   region = "${var.region_name}"
+  depends_on =["openstack_networking_subnet_v2.cf_subnet"]
 }
 
 resource "openstack_networking_floatingip_v2" "lb_floating" {
