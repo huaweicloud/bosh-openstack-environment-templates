@@ -14,6 +14,10 @@ output "net_id" {
   value = "${openstack_networking_network_v2.bosh.id}"
 }
 
+output "subnet_id" {
+  value = "${openstack_networking_subnet_v2.bosh_subnet.id}"
+}
+
 output "internal_ip" {
   value = "${cidrhost(openstack_networking_subnet_v2.bosh_subnet.cidr, 10)}"
 }
