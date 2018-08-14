@@ -245,7 +245,6 @@ resource "openstack_lb_loadbalancer_v2" "cf-lb" {
   vip_subnet_id = "${var.net_id}"
   security_group_ids = ["${openstack_networking_secgroup_v2.cf_lb_sec_group.id}"]
   region = "${var.region_name}"
-  depends_on =["openstack_networking_router_interface_v2.cf_router_interface"]
 }
 
 resource "openstack_networking_floatingip_v2" "lb_floating" {
@@ -320,13 +319,6 @@ resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_tcp_ports_cf_tcp
   port_range_max = "${1024 + var.num_tcp_ports - 1}"
   remote_ip_prefix = "${var.internal_cidr}"
   security_group_id = "${openstack_networking_secgroup_v2.cf_lb_tcp_router_sec_group.id}"
-  region = "${var.region_name}"
-}
-
-resource "openstack_networking_router_interface_v2" "cf_router_interface" {
-  count = "${length(var.availability_zones)}"
-  router_id = "${var.bosh_router_id}"
-  subnet_id = "${var.net_id}"
   region = "${var.region_name}"
 }
 
