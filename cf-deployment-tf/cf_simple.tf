@@ -68,6 +68,14 @@ variable "bosh_router_id" {
   description = "ID of the router, which has an interface to the BOSH network"
 }
 
+variable "internal_cidr" {
+  description = "cidr of the network, which has an interface to the BOSH network"
+}
+
+variable "net_id" {
+  description = "ID of the network that created in bosh deployment"
+}
+
 variable "num_tcp_ports" {
   default = 2
   description = "Number of tcp ports, created for tcp routing in Cloud Foundry. Creates required listeners, pools and security rules."
