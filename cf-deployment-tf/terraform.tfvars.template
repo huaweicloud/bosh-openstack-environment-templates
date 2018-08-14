@@ -21,7 +21,7 @@ use_tcp_router = "<true or false>" #default is true
 num_tcp_ports = <number> #default is 2, needs to be > 0
 
 # only used in cf simple tf
-# net_id = "<network-id>"
+# subnet_id = "<subnet-id>"
 # internal_cidr = "<internal-cidr>"
 
 # in case of self signed certificate select one of the following options
