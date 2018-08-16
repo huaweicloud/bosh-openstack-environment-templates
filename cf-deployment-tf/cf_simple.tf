@@ -83,29 +83,6 @@ variable "num_tcp_ports" {
   description = "Number of tcp ports, created for tcp routing in Cloud Foundry. Creates required listeners, pools and security rules."
 }
 
-resource "openstack_networking_network_v2" "cf_net" {
-  count          = "${var.subnet_id == "" ? length(var.availability_zones) : 0}"
-  region         = "${var.region_name}"
-  name           = "cf-z${count.index}"
-  admin_state_up = "true"
-}
-
-resource "openstack_networking_subnet_v2" "cf_subnet" {
-  count          = "${var.subnet_id == "" ? length(var.availability_zones) : 0}"
-  region           = "${var.region_name}"
-  network_id       = "${element(openstack_networking_network_v2.cf_net.*.id, count.index)}"
-  cidr             = "${cidrsubnet("10.0.0.0/16", 4, count.index+1)}"
-  ip_version       = 4
-  name           = "cf-z${count.index}-sub"
-  allocation_pools = {
-    start = "${cidrhost(cidrsubnet("10.0.0.0/16", 4, count.index+1), 2)}"
-    end   = "${cidrhost(cidrsubnet("10.0.0.0/16", 4, count.index+1), 50)}"
-  }
-  gateway_ip       = "${cidrhost(cidrsubnet("10.0.0.0/16", 4, count.index+1), 1)}"
-  enable_dhcp      = "true"
-  dns_nameservers = "${var.dns_nameservers}"
-}
-
 resource "openstack_networking_secgroup_v2" "cf_sec_group" {
   region      = "${var.region_name}"
   name        = "cf"
@@ -346,14 +323,6 @@ resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_tcp_ports_cf_tcp
   security_group_id = "${openstack_networking_secgroup_v2.cf_lb_tcp_router_sec_group.id}"
   region = "${var.region_name}"
 }
-
-resource "openstack_networking_router_interface_v2" "cf_router_interface" {
-  count = "${var.subnet_id == "" ? length(var.availability_zones) : 0}"
-  router_id = "${var.bosh_router_id}"
-  subnet_id = "${element(openstack_networking_subnet_v2.cf_subnet.*.id, count.index)}"
-  region = "${var.region_name}"
-}
-
 
 output "security group to be assigned to BOSH vm" {
   value = "${openstack_networking_secgroup_v2.bosh_sec_group.name}"
