@@ -84,14 +84,14 @@ variable "num_tcp_ports" {
 }
 
 resource "openstack_networking_network_v2" "cf_net" {
-  count          = "${var.subnet_id == "" ? 0 : ${length(var.availability_zones)}}"
+  count          = "${var.subnet_id == "" ? length(var.availability_zones) : 0}"
   region         = "${var.region_name}"
   name           = "cf-z${count.index}"
   admin_state_up = "true"
 }
 
 resource "openstack_networking_subnet_v2" "cf_subnet" {
-  count          = "${var.subnet_id == "" ? 0 : ${length(var.availability_zones)}}"
+  count          = "${var.subnet_id == "" ? length(var.availability_zones) : 0}"
   region           = "${var.region_name}"
   network_id       = "${element(openstack_networking_network_v2.cf_net.*.id, count.index)}"
   cidr             = "${cidrsubnet("10.0.0.0/16", 4, count.index+1)}"
@@ -197,13 +197,13 @@ resource "openstack_networking_secgroup_v2" "cf_https_router_sec_group" {
 }
 
 resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_tcp_443_cf_https_router" {
-  count = "${length(var.availability_zones)}"
+  count = "${var.subnet_id == "" ? length(var.availability_zones) : 1}"
   direction = "ingress"
   ethertype = "IPv4"
   protocol = "tcp"
   port_range_min = 443
   port_range_max = 443
-  remote_ip_prefix = "${var.internal_cidr}"
+  remote_ip_prefix = "${var.internal_cidr == "" ? element(openstack_networking_subnet_v2.cf_subnet.*.cidr, count.index) : var.internal_cidr}"
   security_group_id = "${openstack_networking_secgroup_v2.cf_https_router_sec_group.id}"
   region = "${var.region_name}"
 }
@@ -215,13 +215,13 @@ resource "openstack_networking_secgroup_v2" "cf_diego_brain_sec_group" {
 }
 
 resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_tcp_2222_cf_diego_brain" {
-  count = "${length(var.availability_zones)}"
+  count = "${var.subnet_id == "" ? length(var.availability_zones) : 1}"
   direction = "ingress"
   ethertype = "IPv4"
   protocol = "tcp"
   port_range_min = 2222
   port_range_max = 2222
-  remote_ip_prefix = "${var.internal_cidr}"
+  remote_ip_prefix = "${var.internal_cidr == "" ? element(openstack_networking_subnet_v2.cf_subnet.*.cidr, count.index) : var.internal_cidr}"
   security_group_id = "${openstack_networking_secgroup_v2.cf_diego_brain_sec_group.id}"
   region = "${var.region_name}"
 }
@@ -346,6 +346,14 @@ resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_tcp_ports_cf_tcp
   security_group_id = "${openstack_networking_secgroup_v2.cf_lb_tcp_router_sec_group.id}"
   region = "${var.region_name}"
 }
+
+resource "openstack_networking_router_interface_v2" "cf_router_interface" {
+  count = "${var.subnet_id == "" ? length(var.availability_zones) : 0}"
+  router_id = "${var.bosh_router_id}"
+  subnet_id = "${element(openstack_networking_subnet_v2.cf_subnet.*.id, count.index)}"
+  region = "${var.region_name}"
+}
+
 
 output "security group to be assigned to BOSH vm" {
   value = "${openstack_networking_secgroup_v2.bosh_sec_group.name}"
