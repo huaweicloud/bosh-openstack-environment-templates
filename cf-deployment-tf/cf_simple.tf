@@ -267,7 +267,7 @@ resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_tcp_ports_cf_lb"
 
 resource "openstack_lb_loadbalancer_v2" "cf-lb" {
   name = "cf-lb"
-  vip_subnet_id = "${var.subnet_id == "" ? ${openstack_networking_subnet_v2.cf_subnet.0.id} : ${var.subnet_id}}"
+  vip_subnet_id = "${var.subnet_id == "" ? openstack_networking_subnet_v2.cf_subnet.0.id : var.subnet_id}"
   security_group_ids = ["${openstack_networking_secgroup_v2.cf_lb_sec_group.id}"]
   region = "${var.region_name}"
 }
