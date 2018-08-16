@@ -69,16 +69,41 @@ variable "bosh_router_id" {
 }
 
 variable "internal_cidr" {
+  default = ""
   description = "cidr of the network, which has an interface to the BOSH network"
 }
 
 variable "subnet_id" {
+  default = ""
   description = "ID of the subnet that created in bosh deployment"
 }
 
 variable "num_tcp_ports" {
   default = 2
   description = "Number of tcp ports, created for tcp routing in Cloud Foundry. Creates required listeners, pools and security rules."
+}
+
+resource "openstack_networking_network_v2" "cf_net" {
+  count          = "${var.subnet_id == "" ? 0 : ${length(var.availability_zones)}}"
+  region         = "${var.region_name}"
+  name           = "cf-z${count.index}"
+  admin_state_up = "true"
+}
+
+resource "openstack_networking_subnet_v2" "cf_subnet" {
+  count          = "${var.subnet_id == "" ? 0 : ${length(var.availability_zones)}}"
+  region           = "${var.region_name}"
+  network_id       = "${element(openstack_networking_network_v2.cf_net.*.id, count.index)}"
+  cidr             = "${cidrsubnet("10.0.0.0/16", 4, count.index+1)}"
+  ip_version       = 4
+  name           = "cf-z${count.index}-sub"
+  allocation_pools = {
+    start = "${cidrhost(cidrsubnet("10.0.0.0/16", 4, count.index+1), 2)}"
+    end   = "${cidrhost(cidrsubnet("10.0.0.0/16", 4, count.index+1), 50)}"
+  }
+  gateway_ip       = "${cidrhost(cidrsubnet("10.0.0.0/16", 4, count.index+1), 1)}"
+  enable_dhcp      = "true"
+  dns_nameservers = "${var.dns_nameservers}"
 }
 
 resource "openstack_networking_secgroup_v2" "cf_sec_group" {
@@ -242,7 +267,7 @@ resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_tcp_ports_cf_lb"
 
 resource "openstack_lb_loadbalancer_v2" "cf-lb" {
   name = "cf-lb"
-  vip_subnet_id = "${var.subnet_id}"
+  vip_subnet_id = "${var.subnet_id == "" ? ${openstack_networking_subnet_v2.cf_subnet.0.id} : ${var.subnet_id}}"
   security_group_ids = ["${openstack_networking_secgroup_v2.cf_lb_sec_group.id}"]
   region = "${var.region_name}"
 }
