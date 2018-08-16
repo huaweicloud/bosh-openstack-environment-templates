@@ -192,7 +192,6 @@ resource "openstack_networking_secgroup_v2" "cf_diego_brain_sec_group" {
 }
 
 resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_tcp_2222_cf_diego_brain" {
-  count = "${var.subnet_id == "" ? length(var.availability_zones) : 1}"
   direction = "ingress"
   ethertype = "IPv4"
   protocol = "tcp"
