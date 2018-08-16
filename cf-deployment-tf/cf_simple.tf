@@ -203,7 +203,7 @@ resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_tcp_443_cf_https
   protocol = "tcp"
   port_range_min = 443
   port_range_max = 443
-  remote_ip_prefix = "${var.internal_cidr == "" ? element(openstack_networking_subnet_v2.cf_subnet.*.cidr, count.index) : var.internal_cidr}"
+  remote_ip_prefix = "${var.subnet_id == "" ? element(openstack_networking_subnet_v2.cf_subnet.*.cidr, count.index) : var.internal_cidr}"
   security_group_id = "${openstack_networking_secgroup_v2.cf_https_router_sec_group.id}"
   region = "${var.region_name}"
 }
