@@ -20,4 +20,4 @@ ext_net_id = "<ext_net_id>"
 
 # in case of self signed certificate select one of the following options
 # cacert_file = "<path-to-certificate>"
-# insecure = "true"
+insecure = "true"
